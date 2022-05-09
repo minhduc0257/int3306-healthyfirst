@@ -10,6 +10,10 @@ namespace int3306.Controllers
         private readonly DataDbContext dbContext;
         public ShopController(DataDbContext dbContext) => this.dbContext = dbContext;
 
+        /// <summary>
+        /// Create a shop.
+        /// </summary>
+        /// <returns></returns>
         [HttpPost]
         [Route("create")]
         public async Task<ActionResult<Shop>> Create([FromBody] Shop shop)
@@ -35,6 +39,11 @@ namespace int3306.Controllers
             return result.Entity;
         }
 
+        /// <summary>
+        /// Get a shop by its ID.
+        /// </summary>
+        /// <param name="id">Shop ID to get.</param>
+        /// <returns></returns>
         [HttpGet]
         [Route("{id:int}")]
         public async Task<ActionResult<Shop>> Get(int id)
@@ -48,6 +57,12 @@ namespace int3306.Controllers
             return shop;
         }
 
+        /// <summary>
+        /// Fully replace shop data (send all data of the shop in the body).
+        /// </summary>
+        /// <param name="id">Shop ID to replace</param>
+        /// <param name="shop">Data to replace.</param>
+        /// <returns></returns>
         [HttpPut]
         [Route("{id:int}")]
         public async Task<ActionResult<Shop>> Update(int id, [FromBody] Shop shop)
@@ -72,6 +87,11 @@ namespace int3306.Controllers
             return shop;
         }
 
+        /// <summary>
+        /// Delete a shop.
+        /// </summary>
+        /// <param name="id">Shop ID to delete</param>
+        /// <returns></returns>
         [HttpDelete]
         [Route("{id:int}")]
         public async Task<ActionResult<Shop>> Delete(int id)
