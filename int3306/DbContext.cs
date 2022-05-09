@@ -10,6 +10,9 @@ namespace int3306
         {
             modelBuilder.Entity<Certificate>()
                 .HasKey(certificate => new { certificate.Timestamp, certificate.ShopId, certificate.TransactionType });
+            modelBuilder.Entity<Ward>()
+                .HasOne(w => w.District)
+                .WithMany(d => d.Wards);
         }
 
         public virtual DbSet<Certificate> Certificates { get; set; }

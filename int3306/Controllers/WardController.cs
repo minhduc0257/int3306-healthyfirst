@@ -18,7 +18,14 @@ namespace int3306.Controllers
         [Route("create")]
         public async Task<ActionResult<Ward>> Create([FromBody] Ward ward)
         {
-            var toInsert = new Ward { WardName = ward.WardName };
+            if (!ModelState.IsValid) return BadRequest();
+
+            if (!await dbContext.Districts.AnyAsync(d => d.DistrictId == ward.DistrictId))
+            {
+                return NotFound("non-existent district id");
+            }
+
+            var toInsert = new Ward { WardName = ward.WardName, DistrictId = ward.DistrictId };
             var result = await dbContext.Wards.AddAsync(toInsert);
             await dbContext.SaveChangesAsync();
             return result.Entity;
@@ -46,6 +53,36 @@ namespace int3306.Controllers
         {
             return await dbContext.Wards.ToArrayAsync();
         }
+
+        /// <summary>
+        /// Update ward with new data, preserving ID.
+        /// </summary>
+        /// <param name="id">Ward ID</param>
+        /// <param name="ward">Details to replace.</param>
+        /// <returns></returns>
+        [HttpPut]
+        [Route("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] Ward ward)
+        {
+            if (ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+            
+            var wardInDb = await dbContext.Wards.FirstOrDefaultAsync(s => s.WardId == id);
+            if (wardInDb == null)
+            {
+                return NotFound();
+            }
+            
+            dbContext.Entry(wardInDb).State = EntityState.Detached;
+            ward.WardId = wardInDb.WardId;
+            dbContext.Wards.Attach(ward);
+            dbContext.Entry(ward).State = EntityState.Modified;
+
+            await dbContext.SaveChangesAsync();
+            return Ok();
+        }
         
         [HttpDelete]
         [Route("{id:int}")]
@@ -53,6 +90,11 @@ namespace int3306.Controllers
         {
             var result = await dbContext.Wards.FirstOrDefaultAsync(w => w.WardId == id);
             if (result == null) return NotFound();
+            if (await dbContext.Shops.AnyAsync(s => s.Ward == result.WardId))
+            {
+                return BadRequest("at least a shop exists with this ward!");
+            }
+            
             dbContext.Remove(result);
             await dbContext.SaveChangesAsync();
             return Ok();
