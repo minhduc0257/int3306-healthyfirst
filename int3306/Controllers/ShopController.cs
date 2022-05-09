@@ -64,6 +64,7 @@ namespace int3306.Controllers
             }
             
             dbContext.Entry(shopInDb).State = EntityState.Detached;
+            shop.Id = shopInDb.Id;
             dbContext.Shops.Attach(shop);
             dbContext.Entry(shop).State = EntityState.Modified;
 
