@@ -24,15 +24,12 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(o =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(o =>
-    {
-        o.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        o.RoutePrefix = string.Empty;
-    });
-}
+    o.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+    o.RoutePrefix = string.Empty;
+});
 
 app.Map($"/{baseApiPath}", appBuilder =>
 {
