@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Newtonsoft.Json;
 
 namespace int3306
 {
@@ -8,12 +9,16 @@ namespace int3306
     {
         [Key]
         [Column("districtId", TypeName = "int(11)")]
+        [JsonProperty("id")]
         public int DistrictId { get; set; }
         
         [Required]
         [Column("districtName", TypeName = "text")]
+        [JsonProperty("name")]
         public string DistrictName { get; set; } = null!;
 
-        [NotMapped] public List<Ward> Wards { get; set; } = null!;
+        [JsonIgnore]
+        [NotMapped]
+        public List<Ward> Wards { get; set; } = null!;
     }
 }
