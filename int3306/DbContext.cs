@@ -8,11 +8,12 @@ namespace int3306
         public DataDbContext(DbContextOptions<DataDbContext> options) : base(options) {}
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Certificate>()
-                .HasKey(certificate => new { certificate.Timestamp, certificate.ShopId, certificate.TransactionType });
             modelBuilder.Entity<Ward>()
                 .HasOne(w => w.District)
                 .WithMany(d => d.Wards);
+            modelBuilder.Entity<Certificate>()
+                .HasOne(ce => ce.Shop)
+                .WithMany(sh => sh.Certificates);
         }
 
         public virtual DbSet<Certificate> Certificates { get; set; }

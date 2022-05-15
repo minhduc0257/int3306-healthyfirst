@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace int3306.Controllers
 {
@@ -39,6 +40,33 @@ namespace int3306.Controllers
             return result.Entity;
         }
 
+        
+        /// <summary>
+        /// List shops.
+        /// </summary>
+        /// <param name="wardId">Filter by ward ID</param>
+        /// <param name="districtId">Filter by district ID</param>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task<ActionResult<Shop[]>> List(
+            int? wardId = null,
+            int? districtId = null
+        )
+        {
+            IQueryable<Shop> query = dbContext.Shops;
+            if (wardId.HasValue)
+                query = query.Where(s => s.Ward == wardId);
+            
+            if (districtId.HasValue)
+                query = query.Where(s => s.District == districtId);
+            
+            var res = await query
+                .OrderBy(s => s.Id)
+                .ToArrayAsync();
+
+            return res;
+        }
+
         /// <summary>
         /// Get a shop by its ID.
         /// </summary>
@@ -48,13 +76,21 @@ namespace int3306.Controllers
         [Route("{id:int}")]
         public async Task<ActionResult<Shop>> Get(int id)
         {
-            var shop = await dbContext.Shops.FirstOrDefaultAsync(s => s.Id == id);
+            var shop = await dbContext.Shops
+                .Include(
+                    s => s.Certificates
+                        .Where(s => s.ShopId == id)
+                        .OrderByDescending(c => c.Timestamp)
+                        .Take(1)
+                )
+                .FirstOrDefaultAsync(s => s.Id == id);
+
             if (shop == null)
             {
                 return NotFound();
             }
 
-            return shop;
+            return Json(shop);
         }
 
         /// <summary>
@@ -71,13 +107,13 @@ namespace int3306.Controllers
             {
                 return BadRequest();
             }
-            
+
             var shopInDb = await dbContext.Shops.FirstOrDefaultAsync(s => s.Id == id);
             if (shopInDb == null)
             {
                 return NotFound();
             }
-            
+
             dbContext.Entry(shopInDb).State = EntityState.Detached;
             shop.Id = shopInDb.Id;
             dbContext.Shops.Attach(shop);

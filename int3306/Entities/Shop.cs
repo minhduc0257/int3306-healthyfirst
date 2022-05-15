@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace int3306
 {
@@ -9,6 +10,7 @@ namespace int3306
     {
         [Key]
         [Column("id", TypeName = "int(11)")]
+        [SwaggerSchema(ReadOnly = true)]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [JsonProperty("id")]
         public int Id { get; set; }
@@ -38,10 +40,15 @@ namespace int3306
         
         [Column("is_producer", TypeName = "tinyint(4)")]
         [JsonProperty("is_product")]
-        public sbyte IsProducer { get; set; }
+        public bool IsProducer { get; set; }
         
         [Column("is_seller", TypeName = "tinyint(4)")]
         [JsonProperty("is_seller")]
-        public sbyte IsSeller { get; set; }
+        public bool IsSeller { get; set; }
+        
+        [SwaggerSchema(ReadOnly = true)]
+        [NotMapped]
+        [JsonProperty("certificates")]
+        public List<Certificate> Certificates { get; set; }
     }
 }

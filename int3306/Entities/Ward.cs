@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace int3306
 {
@@ -8,6 +9,7 @@ namespace int3306
     public class Ward
     {
         [Key]
+        [SwaggerSchema(ReadOnly = true)]
         [Column("wardId", TypeName = "int(11)")]
         [JsonProperty("id")]
         public int WardId { get; set; }
@@ -17,6 +19,7 @@ namespace int3306
         [JsonProperty("districtId")]
         public int? DistrictId { get; set; }
 
+        [SwaggerSchema(ReadOnly = true)]
         [ForeignKey("DistrictId")]
         [NotMapped]
         public District District { get; set; } = null!;
