@@ -14,6 +14,16 @@ builder.Services.AddDbContext<DataDbContext>(options =>
     var connectionString = Environment.GetEnvironmentVariable("MARIADB_CONNECTION_STRING")!;
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 });
+builder.Services.AddCors(cors =>
+{
+    cors.AddDefaultPolicy(
+        policyBuilder => policyBuilder
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials()
+            .SetIsOriginAllowed(_ => true)
+    );
+});
 builder.Services.AddControllers().AddNewtonsoftJson(o =>
 {
     o.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
@@ -41,6 +51,7 @@ app.Map($"/{baseApiPath}", appBuilder =>
 {
     appBuilder.UseRouting();
     appBuilder.UseAuthorization();
+    appBuilder.UseCors();
     appBuilder.UseEndpoints(endpoints =>
     {
         endpoints.MapControllerRoute(
