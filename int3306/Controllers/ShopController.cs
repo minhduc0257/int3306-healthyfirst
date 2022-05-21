@@ -62,6 +62,12 @@ namespace int3306.Controllers
             
             var res = await query
                 .OrderBy(s => s.Id)
+                .Include(
+                    s => s.Certificates
+                        .Where(c => c.ShopId == s.Id)
+                        .OrderByDescending(c => c.Timestamp)
+                        .Take(1)
+                )
                 .ToArrayAsync();
 
             return res;
