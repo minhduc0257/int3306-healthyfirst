@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -11,7 +12,7 @@ namespace int3306
         [Key]
         [Column("id", TypeName = "int(11)")]
         [SwaggerSchema(ReadOnly = true)]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        // [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [JsonProperty("id")]
         public int Id { get; set; }
         
@@ -45,10 +46,11 @@ namespace int3306
         [Column("is_seller", TypeName = "tinyint(4)")]
         [JsonProperty("is_seller")]
         public bool IsSeller { get; set; }
-        
+
         [SwaggerSchema(ReadOnly = true)]
         [NotMapped]
         [JsonProperty("certificates")]
-        public List<Certificate> Certificates { get; set; }
+        [ValidateNever]
+        public List<Certificate> Certificates { get; set; } = null!;
     }
 }
