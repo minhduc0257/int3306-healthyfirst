@@ -24,6 +24,14 @@ namespace int3306.Controllers
                 return BadRequest();
             }
 
+            var dist = await dbContext.Districts
+                .Include(d => d.DistrictId)
+                .FirstOrDefaultAsync(db => db.DistrictId == shop.District);
+
+            if (dist == null) return NotFound($"district id {shop.District} not found");
+            if (dist.Wards.All(w => w.WardId != shop.Ward))
+                return NotFound($"ward id {shop.Ward} does not belong to district id {shop.District}");
+            
             var newEntity = new Shop
             {
                 Name = shop.Name,
