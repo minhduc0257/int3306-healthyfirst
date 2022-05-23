@@ -33,6 +33,7 @@ namespace int3306
         [Required]
         [Column("district", TypeName = "int(11)")]
         [JsonProperty("district")]
+        [ValidateNever]
         public int District { get; set; }
         
         [Column("phone_number", TypeName = "mediumtext")]
