@@ -35,7 +35,9 @@ namespace int3306.Controllers
         [Route("{id:int}")]
         public async Task<ActionResult<District>> Get(int id)
         {
-            var result = await dbContext.Districts.FirstOrDefaultAsync(w => w.DistrictId == id);
+            var result = await dbContext.Districts
+                .Include(d => d.Wards.Where(w => w.DistrictId == id))    
+                .FirstOrDefaultAsync(w => w.DistrictId == id);
             return result == null ? NotFound() : result;
         }
         

@@ -21,7 +21,7 @@ namespace int3306
         public string DistrictName { get; set; } = null!;
 
         [SwaggerSchema(ReadOnly = true)]
-        [JsonIgnore]
+        [JsonProperty("wards")]
         [NotMapped]
         [ValidateNever]
         public List<Ward> Wards { get; set; } = null!;
