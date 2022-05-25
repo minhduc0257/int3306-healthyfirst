@@ -25,11 +25,13 @@ namespace int3306.Controllers
             }
 
             var dist = await dbContext.Districts
-                .Include(d => d.DistrictId)
                 .FirstOrDefaultAsync(db => db.DistrictId == shop.District);
-
+            
             if (dist == null) return NotFound($"district id {shop.District} not found");
-            if (dist.Wards.All(w => w.WardId != shop.Ward))
+
+            var wards = await dbContext.Wards.Where(w => w.DistrictId == dist.DistrictId).ToListAsync();
+            
+            if (wards.All(w => w.WardId != shop.Ward))
                 return NotFound($"ward id {shop.Ward} does not belong to district id {shop.District}");
             
             var newEntity = new Shop
