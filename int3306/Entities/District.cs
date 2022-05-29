@@ -12,6 +12,7 @@ namespace int3306
         [Key]
         [SwaggerSchema(ReadOnly = true)]
         [Column("districtId", TypeName = "int(11)")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [JsonProperty("id")]
         public int DistrictId { get; set; }
         

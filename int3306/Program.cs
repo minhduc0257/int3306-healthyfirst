@@ -1,8 +1,14 @@
 using System.Reflection;
 using int3306;
 using dotenv.net;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
+using CookieAuthenticationEvents = int3306.CookieAuthenticationEvents;
 
 DotEnv.Load();
 
@@ -24,6 +30,46 @@ builder.Services.AddCors(cors =>
             .SetIsOriginAllowed(_ => true)
     );
 });
+builder.Services.AddAuthentication()
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme,
+        options =>
+        {
+            options.SaveToken = true;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = "int3306",
+                ValidAudience = "int3306",
+                IssuerSigningKey = Keys.SigningKey
+            };
+            
+            builder.Configuration.Bind("JwtSettings", options);
+        })
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme,
+        options =>
+        {
+            options.EventsType = typeof(CookieAuthenticationEvents);
+            options.SlidingExpiration = true;
+            options.ExpireTimeSpan = TimeSpan.FromDays(180);
+            builder.Configuration.Bind("CookieSettings", options);
+        });
+
+builder.Services.AddAuthorization(o =>
+{
+    var defaultAuthorizationPolicyBuilder =
+        new AuthorizationPolicyBuilder(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            JwtBearerDefaults.AuthenticationScheme
+        )
+            .RequireAuthenticatedUser();
+    o.DefaultPolicy = defaultAuthorizationPolicyBuilder.Build();
+});
+
+builder.Services.AddScoped<CookieAuthenticationEvents>();
+
 builder.Services.AddControllers().AddNewtonsoftJson(o =>
 {
     o.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
@@ -32,6 +78,27 @@ builder.Services.AddControllers().AddNewtonsoftJson(o =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
+    options.AddSecurityDefinition(name: "Bearer", securityScheme: new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Description = "Enter \"Bearer\" followed by the token",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Name = "Bearer",
+                In = ParameterLocation.Header,
+                Reference = new OpenApiReference { Id = "Bearer", Type = ReferenceType.SecurityScheme }
+            },
+            new List<string>()
+        }
+    });
+
     options.EnableAnnotations();
     options.CustomSchemaIds(type => type.ToString());
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
@@ -49,6 +116,7 @@ app.UseSwaggerUI(o =>
 
 app.Map($"/{baseApiPath}", appBuilder =>
 {
+    appBuilder.UseAuthentication();
     appBuilder.UseRouting();
     appBuilder.UseAuthorization();
     appBuilder.UseCors();

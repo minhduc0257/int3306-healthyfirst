@@ -20,10 +20,11 @@ namespace int3306
         [JsonProperty("districtId")]
         public int? DistrictId { get; set; }
 
-        [SwaggerSchema(ReadOnly = true)]
+        [SwaggerSchema(ReadOnly = true, WriteOnly = true)]
         [ForeignKey("DistrictId")]
         [NotMapped]
         [ValidateNever]
+        [JsonProperty("district")]
         public District District { get; set; } = null!;
         
         [Required]
