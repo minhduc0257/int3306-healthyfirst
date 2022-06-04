@@ -1,3 +1,4 @@
+using LinqKit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,15 @@ namespace int3306.Controllers
     {
         public ShopController(DataDbContext dbContext) : base(dbContext) {}
 
+        private async Task<bool> IsShopAccessible(Shop shop)
+        {
+            return await IsPrivileged()
+                || await DBContext.Grants
+                .Where(g => g.UserId == User.GetUserId() &&
+                            (g.DistrictId == shop.District || g.WardId == shop.Ward))
+                .AnyAsync();
+        }
+        
         /// <summary>
         /// Create a shop.
         /// </summary>
@@ -45,6 +55,11 @@ namespace int3306.Controllers
                 IsSeller = shop.IsSeller
             };
 
+            if (!await IsShopAccessible(shop))
+            {
+                return Unauthorized($"district id {newEntity.District} or ward id {newEntity.Ward} isn't allowed");
+            }
+
             var result = await DBContext.Shops.AddAsync(newEntity);
             await DBContext.SaveChangesAsync();
             return result.Entity;
@@ -64,6 +79,28 @@ namespace int3306.Controllers
         )
         {
             IQueryable<Shop> query = DBContext.Shops;
+            
+            if (!await IsPrivileged())
+            {
+                var uid = User.GetUserId();
+                var grants = await DBContext.Grants.Where(g => g.UserId == uid).ToArrayAsync();
+                if (grants.Length == 0)
+                {
+                    return Array.Empty<Shop>();
+                }
+                
+                var predicate = PredicateBuilder.New<Shop>(s => false);
+                foreach (var g in grants)
+                {
+                    if (g.DistrictId.HasValue)
+                        predicate = predicate.Or(s => s.District == g.DistrictId);
+                    if (g.WardId.HasValue)
+                        predicate = predicate.Or(s => s.Ward == g.WardId);
+                }
+                
+                query = query.AsExpandableEFCore().Where(predicate).AsQueryable();
+            }
+            
             if (wardId.HasValue)
                 query = query.Where(s => s.Ward == wardId);
             
@@ -104,7 +141,7 @@ namespace int3306.Controllers
                 )
                 .FirstOrDefaultAsync(s => s.Id == id);
 
-            if (shop == null)
+            if (shop == null || !await IsShopAccessible(shop))
             {
                 return NotFound();
             }
@@ -128,7 +165,7 @@ namespace int3306.Controllers
             }
 
             var shopInDb = await DBContext.Shops.FirstOrDefaultAsync(s => s.Id == id);
-            if (shopInDb == null)
+            if (shopInDb == null || !await IsShopAccessible(shop))
             {
                 return NotFound();
             }
@@ -152,7 +189,7 @@ namespace int3306.Controllers
         public async Task<ActionResult<Shop>> Delete(int id)
         {
             var shop = await DBContext.Shops.FirstOrDefaultAsync(s => s.Id == id);
-            if (shop == null)
+            if (shop == null || !await IsShopAccessible(shop))
             {
                 return NotFound();
             }
