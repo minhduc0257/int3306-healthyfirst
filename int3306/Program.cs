@@ -121,8 +121,8 @@ app.Map($"/{baseApiPath}", appBuilder =>
 {
     appBuilder.UseAuthentication();
     appBuilder.UseRouting();
-    appBuilder.UseAuthorization();
     appBuilder.UseCors();
+    appBuilder.UseAuthorization();
     appBuilder.Use(async (ctx, next) =>
     {
         var controllerActionDescriptor = ctx
