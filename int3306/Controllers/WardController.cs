@@ -1,8 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace int3306.Controllers
 {
+    [Authorize]
+    [RequirePrivileged]
     [ApiController]
     [Route("/wards")]
     public class WardController : ExtendedController
