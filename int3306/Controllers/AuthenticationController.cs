@@ -12,10 +12,9 @@ namespace int3306.Controllers
     [Authorize]
     [ApiController]
     [Route("auth")]
-    public class AuthenticationController : Controller
+    public class AuthenticationController : ExtendedController
     {
-        private readonly DataDbContext dbContext;
-        public AuthenticationController(DataDbContext dbContext) => this.dbContext = dbContext;
+        public AuthenticationController(DataDbContext dbContext) : base(dbContext) {}
 
         /// <summary>
         /// Log in.
@@ -27,7 +26,7 @@ namespace int3306.Controllers
         [Route("login")]
         public async Task<ActionResult<OAuth2TokenObject>> Login([FromBody] User user)
         {
-            var authenticatedUser = await dbContext.Users
+            var authenticatedUser = await DBContext.Users
                 .Where(u => u.Username == user.Username)
                 .FirstOrDefaultAsync();
 
@@ -37,8 +36,9 @@ namespace int3306.Controllers
                 return Unauthorized();
             }
 
-            var identity = IdentityUtilities.ConstructIdentity(authenticatedUser.Id);
+            var identity = IdentityUtilities.ConstructIdentity(authenticatedUser);
             var claimsPrincipal = new ClaimsPrincipal(identity);
+            claimsPrincipal.AddIdentity(new ClaimsIdentity());
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 claimsPrincipal,
@@ -74,7 +74,7 @@ namespace int3306.Controllers
         {
             var id = User.GetUserId();
             if (id == null) return NotFound();
-            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
+            var user = await DBContext.Users.FirstOrDefaultAsync(u => u.Id == id);
             if (user == null) return NotFound();
             user.Password = null!;
             return user;

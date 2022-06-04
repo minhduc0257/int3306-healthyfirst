@@ -6,12 +6,9 @@ namespace int3306.Controllers
 {
     [ApiController]
     [Route("certificates")]
-    public class CertificateController : Controller
+    public class CertificateController : ExtendedController
     {
-        private readonly DataDbContext dbContext;
-        public CertificateController(DataDbContext dbContext) => this.dbContext = dbContext;
-
-         
+        public CertificateController(DataDbContext dbContext) : base(dbContext) {}
 
         /// <summary>
         /// List cerficates. Support pagination.
@@ -23,7 +20,7 @@ namespace int3306.Controllers
             [FromQuery(Name = "shop")] [Range(0, int.MaxValue)] int? shop = null    
         )
         {
-            IQueryable<Certificate> query = dbContext.Certificates;
+            IQueryable<Certificate> query = DBContext.Certificates;
             if (shop is not null)
             {
                 query = query.Where(c => c.ShopId == shop);
@@ -48,7 +45,7 @@ namespace int3306.Controllers
         [Route("{id:int}")]
         public async Task<ActionResult<Certificate>> Get(int id)
         {
-            var cert = await dbContext.Certificates
+            var cert = await DBContext.Certificates
                 .Include(c => c.Shop)
                 .FirstOrDefaultAsync(c => c.Id == id);
             return cert == default ? NotFound() : cert;
@@ -62,7 +59,7 @@ namespace int3306.Controllers
                 return BadRequest(ModelState);
             }
 
-            var hasShop = await dbContext.Shops.AnyAsync(s => s.Id == certificate.ShopId);
+            var hasShop = await DBContext.Shops.AnyAsync(s => s.Id == certificate.ShopId);
             if (!hasShop) return NotFound($"shop id {certificate.ShopId} not found");
             if (!Enum.IsDefined(certificate.TransactionType)) return BadRequest("invalid certificate type");
             if (certificate.TransactionType == CertificateType.Grant && certificate.Validity is null)
@@ -77,8 +74,8 @@ namespace int3306.Controllers
                 TransactionType = certificate.TransactionType,
                 Validity = certificate.Validity
             };
-            var entry = await dbContext.AddAsync(cert);
-            await dbContext.SaveChangesAsync();
+            var entry = await DBContext.AddAsync(cert);
+            await DBContext.SaveChangesAsync();
             return entry.Entity;
         }
     }

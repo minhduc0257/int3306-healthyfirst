@@ -5,10 +5,9 @@ namespace int3306.Controllers
 {
     [ApiController]
     [Route("/districts")]
-    public class DistrictController : Controller
+    public class DistrictController : ExtendedController
     {
-        private readonly DataDbContext dbContext;
-        public DistrictController(DataDbContext dbContext) => this.dbContext = dbContext; 
+        public DistrictController(DataDbContext dbContext) : base(dbContext) {} 
         
         /// <summary>
         /// Create a District.
@@ -21,8 +20,8 @@ namespace int3306.Controllers
             if (!ModelState.IsValid) return BadRequest();
             
             var toInsert = new District { DistrictName = district.DistrictName };
-            var result = await dbContext.Districts.AddAsync(toInsert);
-            await dbContext.SaveChangesAsync();
+            var result = await DBContext.Districts.AddAsync(toInsert);
+            await DBContext.SaveChangesAsync();
             return result.Entity;
         }
 
@@ -35,7 +34,7 @@ namespace int3306.Controllers
         [Route("{id:int}")]
         public async Task<ActionResult<District>> Get(int id)
         {
-            var result = await dbContext.Districts
+            var result = await DBContext.Districts
                 .Include(d => d.Wards.Where(w => w.DistrictId == id))    
                 .FirstOrDefaultAsync(w => w.DistrictId == id);
             return result == null ? NotFound() : result;
@@ -48,24 +47,24 @@ namespace int3306.Controllers
         [Route("")]
         public async Task<ActionResult<District[]>> List()
         {
-            return await dbContext.Districts.ToArrayAsync();
+            return await DBContext.Districts.ToArrayAsync();
         }
         
         [HttpDelete]
         [Route("{districtId:int}")]
         public async Task<IActionResult> Delete(int districtId)
         {
-            var result = await dbContext.Districts.FirstOrDefaultAsync(w => w.DistrictId == districtId);
+            var result = await DBContext.Districts.FirstOrDefaultAsync(w => w.DistrictId == districtId);
             if (result == null) return NotFound();
             
-            if (await dbContext.Wards.AnyAsync(w => w.DistrictId == result.DistrictId)
-                || await dbContext.Shops.AnyAsync(w => w.District == result.DistrictId))
+            if (await DBContext.Wards.AnyAsync(w => w.DistrictId == result.DistrictId)
+                || await DBContext.Shops.AnyAsync(w => w.District == result.DistrictId))
             {
                 return BadRequest("exist at least one ward or shop with this district id");
             }
 
-            dbContext.Remove(result);
-            await dbContext.SaveChangesAsync();
+            DBContext.Remove(result);
+            await DBContext.SaveChangesAsync();
             return Ok();
         }
     }

@@ -27,5 +27,6 @@ namespace int3306
         public virtual DbSet<Plan> Plans { get; set; }
         public virtual DbSet<Activity> Activity { get; set; }
         public virtual DbSet<User> Users { get; set; }
+        public virtual DbSet<Grant> Grants { get; set; }
     }
 }

@@ -7,18 +7,10 @@ namespace int3306.Controllers
     [ApiController]
     [Authorize]
     [Route("users")]
-    public class UserController : Controller
+    public class UserController : ExtendedController
     {
-        private readonly DataDbContext dbContext;
-        public UserController(DataDbContext dbContext) => this.dbContext = dbContext;
+        public UserController(DataDbContext dbContext) : base(dbContext) {}
 
-        private async Task<bool> IsPrivileged()
-        {
-            var uid = User.GetUserId();
-            var user = await dbContext.Users.FirstOrDefaultAsync(user => user.Id == uid);
-            return user?.Type == UserType.Admin;
-        }
-        
         /// <summary>
         /// List all users. 401 if you're not an admin.
         /// </summary>
@@ -31,7 +23,7 @@ namespace int3306.Controllers
                 return Unauthorized("you are a normal user");
             }
             
-            var res = await dbContext.Users.ToArrayAsync();
+            var res = await DBContext.Users.ToArrayAsync();
             foreach (var u in res)
                 u.Password = null!;
 
@@ -49,7 +41,7 @@ namespace int3306.Controllers
                 return Unauthorized("you are a normal user");
             }
 
-            if (await dbContext.Users.AnyAsync(u => u.Username == user.Username.ToLowerInvariant()))
+            if (await DBContext.Users.AnyAsync(u => u.Username == user.Username.ToLowerInvariant()))
             {
                 return Conflict($"an user with username \"{user.Username.ToLowerInvariant()}\" already exists");
             }
@@ -61,9 +53,9 @@ namespace int3306.Controllers
                 Type = UserType.User
             };
 
-            var res = dbContext.Add(newUser);
+            var res = DBContext.Add(newUser);
             res.Entity.Password = null!;
-            await dbContext.SaveChangesAsync();
+            await DBContext.SaveChangesAsync();
             return res.Entity;
         }
         
@@ -79,7 +71,7 @@ namespace int3306.Controllers
                 return Unauthorized("you are a normal user");
             }
 
-            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
+            var user = await DBContext.Users.FirstOrDefaultAsync(u => u.Id == id);
             if (user == null) return NotFound();
 
             if (user.Type == UserType.Admin)
@@ -87,8 +79,8 @@ namespace int3306.Controllers
                 return Unauthorized("you can't delete an admin!");
             }
             
-            dbContext.Users.Remove(user);
-            await dbContext.SaveChangesAsync();
+            DBContext.Users.Remove(user);
+            await DBContext.SaveChangesAsync();
             return Ok();
         }
     }

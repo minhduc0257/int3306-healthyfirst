@@ -5,10 +5,9 @@ namespace int3306.Controllers
 {
     [ApiController]
     [Route("shops")]
-    public class ShopController : Controller
+    public class ShopController : ExtendedController
     {
-        private readonly DataDbContext dbContext;
-        public ShopController(DataDbContext dbContext) => this.dbContext = dbContext;
+        public ShopController(DataDbContext dbContext) : base(dbContext) {}
 
         /// <summary>
         /// Create a shop.
@@ -23,12 +22,12 @@ namespace int3306.Controllers
                 return BadRequest();
             }
 
-            var dist = await dbContext.Districts
+            var dist = await DBContext.Districts
                 .FirstOrDefaultAsync(db => db.DistrictId == shop.District);
             
             if (dist == null) return NotFound($"district id {shop.District} not found");
 
-            var wards = await dbContext.Wards.Where(w => w.DistrictId == dist.DistrictId).ToListAsync();
+            var wards = await DBContext.Wards.Where(w => w.DistrictId == dist.DistrictId).ToListAsync();
             
             if (wards.All(w => w.WardId != shop.Ward))
                 return NotFound($"ward id {shop.Ward} does not belong to district id {shop.District}");
@@ -44,8 +43,8 @@ namespace int3306.Controllers
                 IsSeller = shop.IsSeller
             };
 
-            var result = await dbContext.Shops.AddAsync(newEntity);
-            await dbContext.SaveChangesAsync();
+            var result = await DBContext.Shops.AddAsync(newEntity);
+            await DBContext.SaveChangesAsync();
             return result.Entity;
         }
 
@@ -62,7 +61,7 @@ namespace int3306.Controllers
             int? districtId = null
         )
         {
-            IQueryable<Shop> query = dbContext.Shops;
+            IQueryable<Shop> query = DBContext.Shops;
             if (wardId.HasValue)
                 query = query.Where(s => s.Ward == wardId);
             
@@ -75,7 +74,7 @@ namespace int3306.Controllers
 
             foreach (var r in res)
             {
-                r.Certificates = await dbContext.Certificates
+                r.Certificates = await DBContext.Certificates
                     .Where(c => c.ShopId == r.Id)
                     .OrderByDescending(c => c.Timestamp)
                     .Take(1)
@@ -94,7 +93,7 @@ namespace int3306.Controllers
         [Route("{id:int}")]
         public async Task<ActionResult<Shop>> Get(int id)
         {
-            var shop = await dbContext.Shops
+            var shop = await DBContext.Shops
                 .Include(
                     s => s.Certificates
                         .Where(s => s.ShopId == id)
@@ -126,18 +125,18 @@ namespace int3306.Controllers
                 return BadRequest();
             }
 
-            var shopInDb = await dbContext.Shops.FirstOrDefaultAsync(s => s.Id == id);
+            var shopInDb = await DBContext.Shops.FirstOrDefaultAsync(s => s.Id == id);
             if (shopInDb == null)
             {
                 return NotFound();
             }
 
-            dbContext.Entry(shopInDb).State = EntityState.Detached;
+            DBContext.Entry(shopInDb).State = EntityState.Detached;
             shop.Id = shopInDb.Id;
-            dbContext.Shops.Attach(shop);
-            dbContext.Entry(shop).State = EntityState.Modified;
+            DBContext.Shops.Attach(shop);
+            DBContext.Entry(shop).State = EntityState.Modified;
 
-            await dbContext.SaveChangesAsync();
+            await DBContext.SaveChangesAsync();
             return shop;
         }
 
@@ -150,14 +149,14 @@ namespace int3306.Controllers
         [Route("{id:int}")]
         public async Task<ActionResult<Shop>> Delete(int id)
         {
-            var shop = await dbContext.Shops.FirstOrDefaultAsync(s => s.Id == id);
+            var shop = await DBContext.Shops.FirstOrDefaultAsync(s => s.Id == id);
             if (shop == null)
             {
                 return NotFound();
             }
 
-            dbContext.Remove(shop);
-            await dbContext.SaveChangesAsync();
+            DBContext.Remove(shop);
+            await DBContext.SaveChangesAsync();
             return Ok();
         }
     }

@@ -5,10 +5,9 @@ namespace int3306.Controllers
 {
     [ApiController]
     [Route("activities")]
-    public class ActivityController : Controller
+    public class ActivityController : ExtendedController
     {
-        private readonly DataDbContext dbContext;
-        public ActivityController(DataDbContext dbContext) => this.dbContext = dbContext;
+        public ActivityController(DataDbContext dbContext) : base(dbContext) {}
 
         /// <summary>
         /// List activities
@@ -19,7 +18,7 @@ namespace int3306.Controllers
             [FromQuery(Name = "shopId")] int? shopId = null    
         )
         {
-            IQueryable<Activity> q = dbContext.Activity;
+            IQueryable<Activity> q = DBContext.Activity;
             if (shopId is not null) q = q.Where(a => a.ShopId == shopId.Value);
 
             return await q.ToArrayAsync();
@@ -39,12 +38,12 @@ namespace int3306.Controllers
                 return BadRequest("activity start time later than end time");
             }
 
-            if (!await dbContext.Plans.AnyAsync(p => p.PlanId == activity.PlanId))
+            if (!await DBContext.Plans.AnyAsync(p => p.PlanId == activity.PlanId))
             {
                 return BadRequest($"non-existent plan id {activity.PlanId}");
             }
             
-            if (!await dbContext.Shops.AnyAsync(s => s.Id == activity.ShopId))
+            if (!await DBContext.Shops.AnyAsync(s => s.Id == activity.ShopId))
             {
                 return BadRequest($"non-existent shop id {activity.ShopId}");
             }
@@ -61,8 +60,8 @@ namespace int3306.Controllers
                 CurrentStep = activity.CurrentStep
             };
 
-            var r = await dbContext.Activity.AddAsync(a);
-            await dbContext.SaveChangesAsync();
+            var r = await DBContext.Activity.AddAsync(a);
+            await DBContext.SaveChangesAsync();
             return r.Entity;
         }
         
@@ -79,19 +78,19 @@ namespace int3306.Controllers
                 return BadRequest("activity start time later than end time");
             }
 
-            if (!await dbContext.Plans.AnyAsync(p => p.PlanId == activity.PlanId))
+            if (!await DBContext.Plans.AnyAsync(p => p.PlanId == activity.PlanId))
             {
                 return BadRequest($"non-existent plan id {activity.PlanId}");
             }
             
-            if (!await dbContext.Shops.AnyAsync(s => s.Id == activity.ShopId))
+            if (!await DBContext.Shops.AnyAsync(s => s.Id == activity.ShopId))
             {
                 return BadRequest($"non-existent shop id {activity.ShopId}");
             }
             
             if (!Enum.IsDefined(activity.CurrentStep)) return BadRequest("invalid step");
 
-            var activityInDb = await dbContext.Activity.FirstOrDefaultAsync(a => a.Id == id);
+            var activityInDb = await DBContext.Activity.FirstOrDefaultAsync(a => a.Id == id);
             if (activityInDb is null)
             {
                 return NotFound($"no activity with id {id}");
@@ -107,11 +106,11 @@ namespace int3306.Controllers
                 CurrentStep = activity.CurrentStep
             };
             
-            dbContext.Entry(activityInDb).State = EntityState.Detached;
+            DBContext.Entry(activityInDb).State = EntityState.Detached;
             a.Id = activityInDb.Id;
-            dbContext.Activity.Attach(a);
-            dbContext.Entry(a).State = EntityState.Modified;
-            await dbContext.SaveChangesAsync();
+            DBContext.Activity.Attach(a);
+            DBContext.Entry(a).State = EntityState.Modified;
+            await DBContext.SaveChangesAsync();
 
             return a;
         }

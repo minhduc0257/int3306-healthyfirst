@@ -5,10 +5,9 @@ namespace int3306.Controllers
 {
     [ApiController]
     [Route("plans")]
-    public class PlanController : Controller
+    public class PlanController : ExtendedController
     {
-        private readonly DataDbContext dbContext;
-        public PlanController(DataDbContext dbContext) => this.dbContext = dbContext;
+        public PlanController(DataDbContext dbContext) : base(dbContext) {}
 
         /// <summary>
         /// Create a plan. Just call it without a body.
@@ -18,8 +17,8 @@ namespace int3306.Controllers
         public async Task<ActionResult<Plan>> Create()
         {
             var p = new Plan();
-            var r = await dbContext.Plans.AddAsync(p);
-            await dbContext.SaveChangesAsync();
+            var r = await DBContext.Plans.AddAsync(p);
+            await DBContext.SaveChangesAsync();
             return r.Entity;
         }
         
@@ -29,7 +28,7 @@ namespace int3306.Controllers
         [HttpGet]
         public async Task<ActionResult<Plan[]>> List()
         {
-            return await dbContext.Plans
+            return await DBContext.Plans
                 .Include(p => p.Activities)
                 .ToArrayAsync();
         }
@@ -42,7 +41,7 @@ namespace int3306.Controllers
         [Route("{id:int}")]
         public async Task<ActionResult<Plan>> Get(int id)
         {
-            var res = await dbContext.Plans.FirstOrDefaultAsync(p => p.PlanId == id);
+            var res = await DBContext.Plans.FirstOrDefaultAsync(p => p.PlanId == id);
             return res != null ? res : NotFound();
         }
         
@@ -54,7 +53,7 @@ namespace int3306.Controllers
         [Route("{id:int}")]
         public async Task<ActionResult<Plan>> Delete(int id)
         {
-            var res = await dbContext.Plans
+            var res = await DBContext.Plans
                 .Include(p => p.Activities)
                 .FirstOrDefaultAsync(p => p.PlanId == id);
 
@@ -66,8 +65,8 @@ namespace int3306.Controllers
                 );
             }
 
-            dbContext.Remove(res);
-            await dbContext.SaveChangesAsync();
+            DBContext.Remove(res);
+            await DBContext.SaveChangesAsync();
             return Ok();
         }
     }
