@@ -1,9 +1,12 @@
+using System.Net;
 using System.Reflection;
 using int3306;
 using dotenv.net;
+using int3306.Controllers;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -120,6 +123,37 @@ app.Map($"/{baseApiPath}", appBuilder =>
     appBuilder.UseRouting();
     appBuilder.UseAuthorization();
     appBuilder.UseCors();
+    appBuilder.Use(async (ctx, next) =>
+    {
+        var controllerActionDescriptor = ctx
+            .GetEndpoint()?
+            .Metadata
+            .GetMetadata<ControllerActionDescriptor>();
+
+        if (controllerActionDescriptor != null)
+        {
+            var requirePrivileged = controllerActionDescriptor.ControllerTypeInfo
+                .GetCustomAttribute<RequirePrivilegedAttribute>();
+
+            requirePrivileged ??=
+                controllerActionDescriptor.MethodInfo.GetCustomAttribute<RequirePrivilegedAttribute>();
+
+            if (requirePrivileged is not null)
+            {
+                var uid = ctx.User.GetUserId();
+                var dbcontext = ctx.RequestServices.GetRequiredService<DataDbContext>();
+                var user = await dbcontext.Users.FirstOrDefaultAsync(user => user.Id == uid);
+                if (user?.Type != UserType.Admin)
+                {
+                    ctx.Response.StatusCode = (int) HttpStatusCode.Found;
+                    ctx.Response.Redirect(UnauthorizedController.Route);
+                    return;
+                }
+            }
+        }
+        
+        await next.Invoke();
+    });
     appBuilder.UseEndpoints(endpoints =>
     {
         endpoints.MapControllerRoute(

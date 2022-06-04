@@ -54,8 +54,8 @@ namespace int3306.Controllers
             };
 
             var res = DBContext.Add(newUser);
-            res.Entity.Password = null!;
             await DBContext.SaveChangesAsync();
+            res.Entity.Password = null!;
             return res.Entity;
         }
         
