@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace int3306.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("certificates")]
     public class CertificateController : ExtendedController

@@ -1,10 +1,13 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace int3306.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("plans")]
+    [RequirePrivileged]
     public class PlanController : ExtendedController
     {
         public PlanController(DataDbContext dbContext) : base(dbContext) {}

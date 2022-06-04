@@ -6,6 +6,7 @@ namespace int3306.Controllers
 {
     [ApiController]
     [Authorize]
+    [RequirePrivileged]
     [Route("users")]
     public class UserController : ExtendedController
     {
@@ -18,11 +19,6 @@ namespace int3306.Controllers
         [HttpGet]
         public async Task<ActionResult<User[]>> ListUsers()
         {
-            if (!await IsPrivileged())
-            {
-                return Unauthorized("you are a normal user");
-            }
-            
             var res = await DBContext.Users.ToArrayAsync();
             foreach (var u in res)
                 u.Password = null!;
@@ -36,11 +32,6 @@ namespace int3306.Controllers
         [HttpPost]
         public async Task<ActionResult<User>> CreateUser([FromBody] User user)
         {
-            if (!await IsPrivileged())
-            {
-                return Unauthorized("you are a normal user");
-            }
-
             if (await DBContext.Users.AnyAsync(u => u.Username == user.Username.ToLowerInvariant()))
             {
                 return Conflict($"an user with username \"{user.Username.ToLowerInvariant()}\" already exists");
@@ -66,11 +57,6 @@ namespace int3306.Controllers
         [Route("{id:int}")]
         public async Task<IActionResult> CreateUser(int id)
         {
-            if (!await IsPrivileged())
-            {
-                return Unauthorized("you are a normal user");
-            }
-
             var user = await DBContext.Users.FirstOrDefaultAsync(u => u.Id == id);
             if (user == null) return NotFound();
 

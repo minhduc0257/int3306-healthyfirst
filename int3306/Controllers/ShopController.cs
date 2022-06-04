@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace int3306.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("shops")]
     public class ShopController : ExtendedController
