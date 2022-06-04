@@ -140,10 +140,11 @@ app.Map($"/{baseApiPath}", appBuilder =>
 
             if (requirePrivileged is not null)
             {
-                var uid = ctx.User.GetUserId();
-                var dbcontext = ctx.RequestServices.GetRequiredService<DataDbContext>();
-                var user = await dbcontext.Users.FirstOrDefaultAsync(user => user.Id == uid);
-                if (user?.Type != UserType.Admin)
+                var isAdmin = await ExtendedController.IsAdmin(
+                    ctx.RequestServices.GetRequiredService<DataDbContext>(),
+                    ctx.User
+                );
+                if (!isAdmin)
                 {
                     ctx.Response.StatusCode = (int) HttpStatusCode.Found;
                     ctx.Response.Redirect(UnauthorizedController.Route);
