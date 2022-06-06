@@ -44,6 +44,36 @@ namespace int3306.Controllers
         }
         
         /// <summary>
+        /// Update district with new data, preserving ID.
+        /// </summary>
+        /// <param name="id">District ID</param>
+        /// <param name="district">Details to replace.</param>
+        /// <returns></returns>
+        [HttpPut]
+        [Route("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] District district)
+        {
+            if (ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+            
+            var districtInDb = await DBContext.Districts.FirstOrDefaultAsync(s => s.DistrictId == id);
+            if (districtInDb == null)
+            {
+                return NotFound();
+            }
+            
+            DBContext.Entry(districtInDb).State = EntityState.Detached;
+            district.DistrictId = districtInDb.DistrictId;
+            DBContext.Districts.Attach(district);
+            DBContext.Entry(district).State = EntityState.Modified;
+
+            await DBContext.SaveChangesAsync();
+            return Ok();
+        }
+        
+        /// <summary>
         /// List all Districts.
         /// </summary>
         [HttpGet]
