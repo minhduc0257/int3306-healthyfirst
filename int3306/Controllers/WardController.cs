@@ -92,9 +92,9 @@ namespace int3306.Controllers
         {
             var result = await DBContext.Wards.FirstOrDefaultAsync(w => w.WardId == id);
             if (result == null) return NotFound();
-            if (await DBContext.Shops.AnyAsync(s => s.Ward == result.WardId))
+            if (await DBContext.Shops.AnyAsync(s => s.Ward == result.WardId) || await DBContext.Grants.AnyAsync(s => s.WardId == result.WardId))
             {
-                return BadRequest("at least a shop exists with this ward!");
+                return BadRequest("at least a shop or ward exists with this ward!");
             }
             
             DBContext.Remove(result);
