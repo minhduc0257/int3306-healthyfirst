@@ -91,9 +91,10 @@ namespace int3306.Controllers
             if (result == null) return NotFound();
             
             if (await DBContext.Wards.AnyAsync(w => w.DistrictId == result.DistrictId)
-                || await DBContext.Shops.AnyAsync(w => w.District == result.DistrictId))
+                || await DBContext.Shops.AnyAsync(w => w.District == result.DistrictId)
+                || await DBContext.Grants.AnyAsync(w => w.DistrictId == result.DistrictId))
             {
-                return BadRequest("exist at least one ward or shop with this district id");
+                return BadRequest("exist at least one ward or shop or grant with this district id");
             }
 
             DBContext.Remove(result);
