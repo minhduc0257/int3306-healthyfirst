@@ -159,11 +159,6 @@ namespace int3306.Controllers
         [Route("{id:int}")]
         public async Task<ActionResult<Shop>> Update(int id, [FromBody] Shop shop)
         {
-            if (ModelState.IsValid)
-            {
-                return BadRequest();
-            }
-
             var shopInDb = await DBContext.Shops.FirstOrDefaultAsync(s => s.Id == id);
             if (shopInDb == null || !await IsShopAccessible(shop))
             {
