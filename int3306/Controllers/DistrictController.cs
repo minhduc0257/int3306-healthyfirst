@@ -53,11 +53,6 @@ namespace int3306.Controllers
         [Route("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] District district)
         {
-            if (ModelState.IsValid)
-            {
-                return BadRequest();
-            }
-            
             var districtInDb = await DBContext.Districts.FirstOrDefaultAsync(s => s.DistrictId == id);
             if (districtInDb == null)
             {
