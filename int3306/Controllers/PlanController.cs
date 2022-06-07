@@ -44,7 +44,7 @@ namespace int3306.Controllers
         [Route("{id:int}")]
         public async Task<ActionResult<Plan>> Get(int id)
         {
-            var res = await DBContext.Plans.FirstOrDefaultAsync(p => p.PlanId == id);
+            var res = await DBContext.Plans.Include(p => p.Activities).FirstOrDefaultAsync(p => p.PlanId == id);
             return res != null ? res : NotFound();
         }
         
